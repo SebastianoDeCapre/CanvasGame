@@ -70,11 +70,16 @@ document.addEventListener("keyup", (e) => {
   }
 });
 
+
+
+
 document.addEventListener("mousemove", (e) => {
     const canvasRect = gameCanvas.getBoundingClientRect();
     mouseX = e.clientX - canvasRect.left - 10;
     mouseY = e.clientY - canvasRect.top - 10;
   });
+
+
 
 // -------------------------------------
 // ------------ Animation ------------
