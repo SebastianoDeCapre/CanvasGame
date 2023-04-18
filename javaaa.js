@@ -144,10 +144,6 @@ function enemyMovement(enemyX) {
 }
 
 
-function createEnemyLaser() {
-  if (!shootingcooldown)
-}
-
 function createBullet() {
     if (!shootingCooldown) {
         shootingCooldown = true;
