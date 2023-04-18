@@ -30,6 +30,13 @@ let directions = {
   down: false,
 };
 
+// ---------- Simple Enemy -------- //
+
+let enemyX = playerX;
+let enemyY = 30;
+let enemyWidth = 20;
+let enemyHeight = 20;
+
 // -------------------------------------
 // ------------ Player movement ------------
 document.addEventListener("keydown", (e) => {
@@ -110,7 +117,11 @@ if (angle < -Math.PI/2) {
   c.rotate(angle);
   c.fillStyle = "purple";
   c.fillRect(-purpleWidth / 2, -purpleHeight / 2, purpleWidth, purpleHeight);
+
+
   c.restore();
+
+  
 
 
   //Updates the players position and moves diagonally

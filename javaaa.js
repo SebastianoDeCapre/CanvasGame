@@ -4,7 +4,7 @@ const SCREENHEIGHT = innerHeight;
 let gameCanvas = document.getElementById("gameCanvas");
 let c = gameCanvas.getContext("2d"); // Drawing object
 gameCanvas.height = SCREENHEIGHT/ 1.1;
-gameCanvas.width = SCREENWIDTH /1.1;
+gameCanvas.width = SCREENWIDTH /2;
 
 
 
@@ -44,6 +44,19 @@ let purpleX = playerX + playerWidth / 2;
 let purpleY = playerY + playerHeight / 2;
 let purpleWidth = 30;
 let purpleHeight = 100;
+
+
+// simple enemy //
+
+let enemyY = 40;
+let enemyWidth = 30;
+let enemyHeight = 30;
+let enemyX = 20;
+
+let enemyLaserX = 0;
+let enemyLaserY= 0; 
+let enemyLaserHeight = 10;
+let enemylaserWidth = 5;
 
 let directions = {
   left: false,
@@ -118,6 +131,23 @@ document.addEventListener("mouseup", (e) => {
     isDown = false
 })
 
+function enemyMovement(enemyX) {
+  if (enemyX >= 600) {
+    speed = -2;
+  } else if (enemyX <= 20) {
+    speed = 2
+  }
+
+  enemyX += speed;
+
+  return enemyX
+}
+
+
+function createEnemyLaser() {
+  if (!shootingcooldown)
+}
+
 function createBullet() {
     if (!shootingCooldown) {
         shootingCooldown = true;
@@ -183,6 +213,13 @@ function animate() {
   if (isDown) {
     createBullet()
   }
+
+
+  enemyX = enemyMovement(enemyX)
+
+  c.fillStyle = "red";
+  c.fillRect(enemyX, enemyY, enemyHeight, enemyWidth);
+  
   
   const deltaX = playerX - mouseX;
   const deltaY = playerY - mouseY;
@@ -202,8 +239,10 @@ if (angle < -Math.PI/2) {
     if (bullets[index].projectileY > gameCanvas.height || bullets[index].projectileY < 0 || bullets[index].projectileX > gameCanvas.width || bullets[index].projectileX < 0 ) {
         bullets.splice(index, 1);
     }
+
+    
 } 
-    //   // Draw purple object
+    //   // Draw Cannon object
   c.save();
   c.translate(purpleX, purpleY);
   c.rotate(angle);
@@ -214,17 +253,14 @@ if (angle < -Math.PI/2) {
     turretImage = turrentNotShooting
   }
 
-  
-
   c.drawImage(turretImage, -purpleWidth / 2, -purpleHeight / 2, purpleWidth, purpleHeight);
+
+
   c.restore();
 
     
     // Stop shooting if the projectile goes out of screen    
     
-    
-
-
 
   //Updates the players position and moves diagonally
 
