@@ -46,17 +46,58 @@ let purpleWidth = 30;
 let purpleHeight = 100;
 
 
-// simple enemy //
+//*** simple enemy ***//
 
 let enemyY = 40;
 let enemyWidth = 30;
 let enemyHeight = 30;
 let enemyX = 20;
 
+//** Enemy projectile varibels */
 let enemyLaserX = 0;
 let enemyLaserY= 0; 
 let enemyLaserHeight = 10;
-let enemylaserWidth = 5;
+let enemyLaserWidth = 5;
+let enemyLaserSpeed = 10;
+let enemyIsShooting = false;
+let enemyLaserDY = 0;
+
+let lasers = []
+
+function enemyMovement(enemyX) {
+  if (enemyX >= 750) {
+    speed = -2;
+  } else if (enemyX <= 20) {
+    speed = 2
+  }
+
+  enemyX += speed;
+
+  return enemyX
+}
+
+function createEnemyLaser(enemyX, enemyY) {
+
+  const laserWidth = 5;
+  const laserHeight = 10;
+  const laserSpeed = 6;
+  const laserColor = "#FF0000"; // red color for the laser
+
+  const laserX = enemyX + (enemyLaserWidth / 2) - (laserWidth / 2) + 15; // laser x position centered with the block
+  const laserY = enemyY + enemyLaserHeight; // laser starts at the bottom of the block
+
+  lasers.push({
+    x: laserX,
+    y: laserY,
+    width: laserWidth,
+    height: laserHeight,
+    color: laserColor,
+    dy: laserSpeed // the laser moves downwards, so the dy value is positive
+  });
+
+}
+
+/** **/
 
 let directions = {
   left: false,
@@ -129,20 +170,7 @@ document.addEventListener("mousedown", (e) => {
 
 document.addEventListener("mouseup", (e) => {
     isDown = false
-})
-
-function enemyMovement(enemyX) {
-  if (enemyX >= 600) {
-    speed = -2;
-  } else if (enemyX <= 20) {
-    speed = 2
-  }
-
-  enemyX += speed;
-
-  return enemyX
-}
-
+})  
 
 function createBullet() {
     if (!shootingCooldown) {
@@ -157,7 +185,7 @@ function createBullet() {
         const deltaY = playerY - mouseY;
 
         randomSpread = Math.random() * 0.05
-        if (Math.random() > 0.5) {
+        if (Math.random() > 0.05) {
             randomSpread = -randomSpread
         }
 
@@ -193,6 +221,20 @@ function startShootingInterval() {
     }, 150);
   }
 
+LaserPause = false
+let setTime = 5000; // 2 seconds
+let remainTime = 2000; // 5 seconds
+
+function laserPauseInterval(LaserPause) {
+  LaserPause = false;
+  setTimeout(function() {
+    LaserPause = true;
+  }, remainTime);
+  return LaserPause
+}
+
+GapCounter = 0
+
 // -------------------------------------
 // ------------ Animation ------------
 function animate() {
@@ -215,7 +257,42 @@ function animate() {
 
   c.fillStyle = "red";
   c.fillRect(enemyX, enemyY, enemyHeight, enemyWidth);
+
+
+  if (GapCounter < 500) {
+    createEnemyLaser(enemyX, enemyY)
+    GapCounter += 3
+  } else if (GapCounter >= 500 && GapCounter < 600) {
+    GapCounter += 7
+  } else if (GapCounter >= 600) {
+    GapCounter = 0
+  }
+
+  console.log(GapCounter)
+
+
+
+
+
+  for (let i = 0; i < lasers.length; i++) {
+    const laser = lasers[i];
+    laser.y += laser.dy;
   
+    // check if the laser is off the canvas, and remove it from the array if it is
+    if (laser.y < 0 || laser.y > gameCanvas.height) {
+      lasers.splice(i, 1);
+      i--;
+      continue;
+    }
+  
+    // draw the laser on the canvas
+    c.fillStyle = laser.color;
+    c.fillRect(laser.x, laser.y, laser.width, laser.height);
+
+  }
+
+
+
   
   const deltaX = playerX - mouseX;
   const deltaY = playerY - mouseY;
@@ -235,6 +312,15 @@ if (angle < -Math.PI/2) {
     if (bullets[index].projectileY > gameCanvas.height || bullets[index].projectileY < 0 || bullets[index].projectileX > gameCanvas.width || bullets[index].projectileX < 0 ) {
         bullets.splice(index, 1);
     }
+
+
+
+  // for (let index = 0; index < lasers.length; index++) {
+  //   lasers[index].enemyLaserX += lasers[index].enemyLaserDX
+  //   lasers[index].enemyLaserY += lasers[index].enemyLaserDY
+  //   c.fillRect(lasers[index].enemyLaserX - projectileSize / 2, lasers[index].projectileY - projectileSize / 2, projectileSize, projectileSize);
+  //   if (lasers[index].projectileY > gameCanvas.height || lasers[index].projectileY < 0 || lasers[index].projectileX > gameCanvas.width || bullets[index].projectileX < 0 ) {
+  //       lasers.splice(index, 1);
 
     
 } 
@@ -300,7 +386,27 @@ if (angle < -Math.PI/2) {
   if (playerY + playerHeight > gameCanvas.height) {
     playerY = gameCanvas.height - playerHeight;
   }
+
+
+  // Call createEnemyLaser() function to create laser
+  createEnemyLaser();
+
+  // Loop through lasers array and update each laser position
+  for (let i = 0; i < lasers.length; i++) {
+    const laser = lasers[i];
+    laser.enemyLaserY += laser.enemyLaserDY;
   
+    // Draw laser on canvas
+    c.fillStyle = "red";
+    c.fillRect(laser.enemyLaserX, laser.enemyLaserY, 10, 20);
+  
+    // Remove laser if it goes off-screen
+    if (laser.enemyLaserY < 0 || laser.enemyLaserY > gameCanvas.height) {
+      lasers.splice(i, 1);
+      i--;
+    }
+  }
+
 }
 
 // -------------------------------------
