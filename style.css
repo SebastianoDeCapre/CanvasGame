@@ -4,3 +4,21 @@
     border-color: black;
     border-style: double;
 }
+
+/* .gameOverBlock {
+    background-color: rgba(37, 32, 32, 0.347);
+    width: 700px;
+    height: 700px;
+    z-index: 1000;
+    position: absolute;
+    top: 0;
+} */
+
+#resetButton {
+    width:200px ;
+    height:50px;
+    position: absolute;
+    left:300px;
+    top:300px;
+    display:none;
+}

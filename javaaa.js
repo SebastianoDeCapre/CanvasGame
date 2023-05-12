@@ -18,6 +18,7 @@ let dx = 4;
 let dy = 4;
 let mouseX = 0;
 let mouseY = 0;
+let PlayerDead = false
 
 let randomSpread = 0
 
@@ -95,6 +96,40 @@ function createEnemyLaser(enemyX, enemyY) {
     dy: laserSpeed // the laser moves downwards, so the dy value is positive
   });
 
+}
+
+function checkCollisions() {
+  // Loop through all the enemy lasers
+  for (let i = 0; i < lasers.length; i++) {
+    const laser = lasers[i];
+
+    // Check for collision with the player
+    if (laser.x < playerX + playerWidth &&
+        laser.x + laser.width > playerX &&
+        laser.y < playerY + playerHeight &&
+        laser.y + laser.height > playerY) {
+      // Collision detected
+      // Remove the player and the laser from the canvas
+      c.clearRect(playerX, playerY, playerWidth, playerHeight);
+      c.clearRect(laser.x, laser.y, laser.width, laser.height);
+
+      // Remove the laser from the lasers array
+      lasers.splice(i, 1);
+
+      console.log("ded")
+
+      if (immunity === true) {
+        console.log("immunity")
+      } else if (immunity === false && health > 0) {
+        immunity === true;
+        health -= 1
+      } else {
+        PlayerDead = true
+      }
+
+      return PlayerDead, health
+    }
+  }
 }
 
 /** **/
@@ -235,180 +270,195 @@ function laserPauseInterval(LaserPause) {
 
 GapCounter = 0
 
+let resetButton = document.getElementById("resetButton")
+
 // -------------------------------------
 // ------------ Animation ------------
 function animate() {
   requestAnimationFrame(animate); // Run gameloop recursively
   c.clearRect(0, 0, gameCanvas.width, gameCanvas.height); // Clear screen
 
-  // Draw black player
-  c.fillRect(playerX, playerY, playerWidth, playerHeight);
-
-  // Update purple object position based on black player position
-  purpleX = playerX + playerWidth / 2;
-  purpleY = playerY + playerHeight / 2;
-
-  if (isDown) {
-    createBullet()
-  }
-
-
-  enemyX = enemyMovement(enemyX)
-
-  c.fillStyle = "red";
-  c.fillRect(enemyX, enemyY, enemyHeight, enemyWidth);
-
-
-  if (GapCounter < 500) {
-    createEnemyLaser(enemyX, enemyY)
-    GapCounter += 3
-  } else if (GapCounter >= 500 && GapCounter < 600) {
-    GapCounter += 7
-  } else if (GapCounter >= 600) {
-    GapCounter = 0
-  }
-
-  console.log(GapCounter)
-
-
-
-
-
-  for (let i = 0; i < lasers.length; i++) {
-    const laser = lasers[i];
-    laser.y += laser.dy;
-  
-    // check if the laser is off the canvas, and remove it from the array if it is
-    if (laser.y < 0 || laser.y > gameCanvas.height) {
-      lasers.splice(i, 1);
-      i--;
-      continue;
-    }
-  
-    // draw the laser on the canvas
-    c.fillStyle = laser.color;
-    c.fillRect(laser.x, laser.y, laser.width, laser.height);
-
-  }
-
-
-
-  
-  const deltaX = playerX - mouseX;
-  const deltaY = playerY - mouseY;
-  let angle = Math.atan2(deltaY, deltaX) - Math.PI / 2;
-  // Handle angle wraparound
-if (angle < -Math.PI/2) {
-    angle += 2*Math.PI;
-  } else if (angle > Math.PI/2) {
-    angle -= 2*Math.PI;
-  }
-
-  // Draw projectile if it's shooting and removes it if it is out of bounds
-  for (let index = 0; index < bullets.length; index++) {
-    bullets[index].projectileX += bullets[index].projectileDX
-    bullets[index].projectileY += bullets[index].projectileDY
-    c.fillRect(bullets[index].projectileX - projectileSize / 2, bullets[index].projectileY - projectileSize / 2, projectileSize, projectileSize);
-    if (bullets[index].projectileY > gameCanvas.height || bullets[index].projectileY < 0 || bullets[index].projectileX > gameCanvas.width || bullets[index].projectileX < 0 ) {
-        bullets.splice(index, 1);
-    }
-
-
-
-  // for (let index = 0; index < lasers.length; index++) {
-  //   lasers[index].enemyLaserX += lasers[index].enemyLaserDX
-  //   lasers[index].enemyLaserY += lasers[index].enemyLaserDY
-  //   c.fillRect(lasers[index].enemyLaserX - projectileSize / 2, lasers[index].projectileY - projectileSize / 2, projectileSize, projectileSize);
-  //   if (lasers[index].projectileY > gameCanvas.height || lasers[index].projectileY < 0 || lasers[index].projectileX > gameCanvas.width || bullets[index].projectileX < 0 ) {
-  //       lasers.splice(index, 1);
-
-    
-} 
-    //   // Draw Cannon object
-  c.save();
-  c.translate(purpleX, purpleY);
-  c.rotate(angle);
-  c.fillStyle = "purple";
-  if (shootingPicture) {
-    turretImage = turretShooting
+  if (PlayerDead === true) {
+    resetButton.style.display = "block";
   } else {
-    turretImage = turrentNotShooting
-  }
+    // Draw black player
+    c.fillRect(playerX, playerY, playerWidth, playerHeight);
 
-  c.drawImage(turretImage, -purpleWidth / 2, -purpleHeight / 2, purpleWidth, purpleHeight);
+    // Update purple object position based on black player position
+    purpleX = playerX + playerWidth / 2;
+    purpleY = playerY + playerHeight / 2;
 
-
-  c.restore();
-
-    
-    // Stop shooting if the projectile goes out of screen    
-    
-
-  //Updates the players position and moves diagonally
-
-  if (directions.right && directions.down) {
-    playerX += dx / Math.sqrt(2)
-    playerY += dy / Math.sqrt(2)
-  } else if (directions.right && directions.up) {
-    playerX += dx / Math.sqrt(2) 
-    playerY -= dy / Math.sqrt(2)
-  } else if (directions.left && directions.down) {
-    playerX -= dx / Math.sqrt(2) 
-    playerY += dy / Math.sqrt(2)
-  } else if (directions.left && directions.up) {
-    playerX -= dx / Math.sqrt(2) 
-    playerY -= dy / Math.sqrt(2)
-  } else if (directions.right) {
-    playerX += dx;
-  } else if (directions.left) {
-    playerX -= dx;
-  } else if (directions.up) {
-    playerY -= dy;
-  } else if (directions.down) {
-    playerY += dy;
-  }
-
-  if (playerX < 0) {
-    playerX = 0;
-  }
-  
-  // Check if the player is outside the right edge of the canvas
-  if (playerX + playerWidth > gameCanvas.width) {
-    playerX = gameCanvas.width - playerWidth;
-  }
-  
-  // Check if the player is outside the top edge of the canvas
-  if (playerY < 0) {
-    playerY = 0;
-  }
-  
-  // Check if the player is outside the bottom edge of the canvas
-  if (playerY + playerHeight > gameCanvas.height) {
-    playerY = gameCanvas.height - playerHeight;
-  }
-
-
-  // Call createEnemyLaser() function to create laser
-  createEnemyLaser();
-
-  // Loop through lasers array and update each laser position
-  for (let i = 0; i < lasers.length; i++) {
-    const laser = lasers[i];
-    laser.enemyLaserY += laser.enemyLaserDY;
-  
-    // Draw laser on canvas
-    c.fillStyle = "red";
-    c.fillRect(laser.enemyLaserX, laser.enemyLaserY, 10, 20);
-  
-    // Remove laser if it goes off-screen
-    if (laser.enemyLaserY < 0 || laser.enemyLaserY > gameCanvas.height) {
-      lasers.splice(i, 1);
-      i--;
+    if (isDown) {
+      createBullet()
     }
-  }
 
+
+    enemyX = enemyMovement(enemyX)
+
+    c.fillStyle = "red";
+    c.fillRect(enemyX, enemyY, enemyHeight, enemyWidth);
+
+
+    if (GapCounter < 500) {
+      createEnemyLaser(enemyX, enemyY)
+      GapCounter += 3
+    } else if (GapCounter >= 500 && GapCounter < 600) {
+      GapCounter += 7
+    } else if (GapCounter >= 600) {
+      GapCounter = 0
+    }
+
+    console.log(GapCounter)
+
+
+
+
+
+
+
+
+    for (let i = 0; i < lasers.length; i++) {
+      const laser = lasers[i];
+      laser.y += laser.dy;
+    
+      // check if the laser is off the canvas, and remove it from the array if it is
+      if (laser.y < 0 || laser.y > gameCanvas.height) {
+        lasers.splice(i, 1);
+        i--;
+        continue;
+      }
+    
+      // draw the laser on the canvas
+      c.fillStyle = laser.color;
+      c.fillRect(laser.x, laser.y, laser.width, laser.height);
+
+    }
+
+
+
+    
+    const deltaX = playerX - mouseX;
+    const deltaY = playerY - mouseY;
+    let angle = Math.atan2(deltaY, deltaX) - Math.PI / 2;
+    // Handle angle wraparound
+  if (angle < -Math.PI/2) {
+      angle += 2*Math.PI;
+    } else if (angle > Math.PI/2) {
+      angle -= 2*Math.PI;
+    }
+
+    // Draw projectile if it's shooting and removes it if it is out of bounds
+    for (let index = 0; index < bullets.length; index++) {
+      bullets[index].projectileX += bullets[index].projectileDX
+      bullets[index].projectileY += bullets[index].projectileDY
+      c.fillRect(bullets[index].projectileX - projectileSize / 2, bullets[index].projectileY - projectileSize / 2, projectileSize, projectileSize);
+      if (bullets[index].projectileY > gameCanvas.height || bullets[index].projectileY < 0 || bullets[index].projectileX > gameCanvas.width || bullets[index].projectileX < 0 ) {
+          bullets.splice(index, 1);
+      }
+
+
+
+    // for (let index = 0; index < lasers.length; index++) {
+    //   lasers[index].enemyLaserX += lasers[index].enemyLaserDX
+    //   lasers[index].enemyLaserY += lasers[index].enemyLaserDY
+    //   c.fillRect(lasers[index].enemyLaserX - projectileSize / 2, lasers[index].projectileY - projectileSize / 2, projectileSize, projectileSize);
+    //   if (lasers[index].projectileY > gameCanvas.height || lasers[index].projectileY < 0 || lasers[index].projectileX > gameCanvas.width || bullets[index].projectileX < 0 ) {
+    //       lasers.splice(index, 1);
+
+      
+  } 
+      //   // Draw Cannon object
+    c.save();
+    c.translate(purpleX, purpleY);
+    c.rotate(angle);
+    c.fillStyle = "purple";
+    if (shootingPicture) {
+      turretImage = turretShooting
+    } else {
+      turretImage = turrentNotShooting
+    }
+
+    c.drawImage(turretImage, -purpleWidth / 2, -purpleHeight / 2, purpleWidth, purpleHeight);
+
+
+    c.restore();
+
+      
+      // Stop shooting if the projectile goes out of screen    
+      
+
+    //Updates the players position and moves diagonally
+
+    if (directions.right && directions.down) {
+      playerX += dx / Math.sqrt(2)
+      playerY += dy / Math.sqrt(2)
+    } else if (directions.right && directions.up) {
+      playerX += dx / Math.sqrt(2) 
+      playerY -= dy / Math.sqrt(2)
+    } else if (directions.left && directions.down) {
+      playerX -= dx / Math.sqrt(2) 
+      playerY += dy / Math.sqrt(2)
+    } else if (directions.left && directions.up) {
+      playerX -= dx / Math.sqrt(2) 
+      playerY -= dy / Math.sqrt(2)
+    } else if (directions.right) {
+      playerX += dx;
+    } else if (directions.left) {
+      playerX -= dx;
+    } else if (directions.up) {
+      playerY -= dy;
+    } else if (directions.down) {
+      playerY += dy;
+    }
+
+    if (playerX < 0) {
+      playerX = 0;
+    }
+    
+    // Check if the player is outside the right edge of the canvas
+    if (playerX + playerWidth > gameCanvas.width) {
+      playerX = gameCanvas.width - playerWidth;
+    }
+    
+    // Check if the player is outside the top edge of the canvas
+    if (playerY < 0) {
+      playerY = 0;
+    }
+    
+    // Check if the player is outside the bottom edge of the canvas
+    if (playerY + playerHeight > gameCanvas.height) {
+      playerY = gameCanvas.height - playerHeight;
+    }
+
+
+    // Call createEnemyLaser() function to create laser
+    createEnemyLaser();
+
+    // Loop through lasers array and update each laser position
+    for (let i = 0; i < lasers.length; i++) {
+      const laser = lasers[i];
+      laser.enemyLaserY += laser.enemyLaserDY;
+    
+      // Draw laser on canvas
+      c.fillStyle = "red";
+      c.fillRect(laser.enemyLaserX, laser.enemyLaserY, 10, 20);
+    
+      // Remove laser if it goes off-screen
+      if (laser.enemyLaserY < 0 || laser.enemyLaserY > gameCanvas.height) {
+        lasers.splice(i, 1);
+        i--;
+      }
+    }
+
+    checkCollisions(PlayerDead);
+
+  }
 }
 
 // -------------------------------------
 // ------------ Start game ------------
 animate();
+
+resetButton.addEventListener("click", () => {
+  location.reload();
+});
