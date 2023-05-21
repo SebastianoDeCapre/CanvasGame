@@ -34,6 +34,8 @@ let shootingPicture = false
 
 let turretImage = 0;
 
+let frameTimer = 0
+
 const turretShooting = new Image(); // Create new img element
 turretShooting.src = "turretShooting.png"; // Set source path
 
@@ -98,6 +100,76 @@ function createEnemyLaser(enemyX, enemyY) {
 
 }
 
+enemies = []
+
+function createShooterBullet(shooter) {
+  const bulletSpeed = 3;
+  const deltaX = playerX - shooter.x;
+  const deltaY = playerY - shooter.y;
+  const angle = Math.atan2(deltaY, deltaX);
+  const projectileDX = bulletSpeed * Math.cos(angle);
+  const projectileDY = bulletSpeed * Math.sin(angle);
+
+  bullets.push({
+    projectileX: shooter.x,
+    projectileY: shooter.y,
+    projectileDX,
+    projectileDY,
+    isPlayerBullet: false, // Indicate that it's a shooter's bullet
+  });
+}
+
+function createShooter() {
+  const shooter = {
+    x: Math.random() * gameCanvas.width, // Random x-coordinate
+    y: 0, // Starting y-coordinate (top of the canvas)
+    width: 20, // Block width
+    height: 20, // Block height
+    speed: 2, // Falling speed
+    fireRate: 1000, // Fire rate in milliseconds
+    lastFireTime: Date.now() // Initialize last fire time
+  };
+
+  enemies.push(shooter);
+}
+
+function updateShooters() {
+  enemies.forEach((enemy) => {
+    if (Date.now() - enemy.lastFireTime > enemy.fireRate) {
+      createShooterBullet(enemy);
+      enemy.lastFireTime = Date.now();
+    }
+  });
+}
+
+function enemyCollisionCheck() {
+  bullets.forEach((bullet, bulletIndex) => {
+    enemies.forEach((enemy, enemyIndex) => {
+      if (
+        bullet.projectileX < enemy.x + enemy.width &&
+        bullet.projectileX + projectileSize > enemy.x &&
+        bullet.projectileY < enemy.y + enemy.height &&
+        bullet.projectileY + projectileSize > enemy.y
+      ) {
+        // Collision detected with player's bullet
+        if (bullet.isPlayerBullet === true) {
+          // Remove the block and the player's bullet
+          enemies.splice(enemyIndex, 1);
+          bullets.splice(bulletIndex, 1);
+        } else {
+          console.log("i hit myself")
+        }
+      }
+    });
+  });
+}
+
+
+
+let immunity = false
+
+let health = 3
+
 function checkCollisions() {
   // Loop through all the enemy lasers
   for (let i = 0; i < lasers.length; i++) {
@@ -116,21 +188,68 @@ function checkCollisions() {
       // Remove the laser from the lasers array
       lasers.splice(i, 1);
 
-      console.log("ded")
-
       if (immunity === true) {
-        console.log("immunity")
+        console.log("immunity");
+        return;
       } else if (immunity === false && health > 0) {
-        immunity === true;
-        health -= 1
+        immunity = true;
+        health -= 1;
+
+        setTimeout(function() {
+          immunity = false;
+          console.log("Immunity expired");
+        }, 3000); // Delay in milliseconds (3 seconds);
       } else {
-        PlayerDead = true
+        PlayerDead = true;
+        console.log("ded");
       }
 
-      return PlayerDead, health
+      return PlayerDead, health, immunity;
+    }
+  }
+
+  // Loop through all the new projectiles
+  for (let i = 0; i < bullets.length; i++) {
+    const bullet = bullets[i];
+
+    // Check for collision with the player
+    if (bullet.projectileX < playerX + playerWidth &&
+        bullet.projectileX + projectileSize > playerX &&
+        bullet.projectileY < playerY + playerHeight &&
+        bullet.projectileY + projectileSize > playerY) {
+      // Collision detected
+      // Remove the player and the bullet from the canvas
+      if (bullet.isPlayerBullet === false) {
+        c.clearRect(playerX, playerY, playerWidth, playerHeight);
+        c.clearRect(bullet.projectileX, bullet.projectileY, projectileSize, projectileSize);
+
+        // Remove the bullet from the bullets array
+        bullets.splice(i, 1);
+
+        if (immunity === true) {
+          console.log("immunity");
+          return;
+        } else if (immunity === false && health > 0) {
+          immunity = true;
+          health -= 1;
+
+          setTimeout(function() {
+            immunity = false;
+            console.log("Immunity expired");
+          }, 3000); // Delay in milliseconds (3 seconds);
+        } else {
+          PlayerDead = true;
+          console.log("ded");
+        }
+      } else {
+        console.log("nah")
+      }
+
+        return PlayerDead, health, immunity;
     }
   }
 }
+
 
 /** **/
 
@@ -140,6 +259,8 @@ let directions = {
   up: false,
   down: false,
 };
+
+boss = false
 
 // -------------------------------------
 // ------------ Player movement ------------
@@ -235,6 +356,7 @@ function createBullet() {
             projectileY,
             projectileDX,
             projectileDY,
+            isPlayerBullet: true, // Indicate that it's a shooter's bullet
         })
     }
 }
@@ -270,6 +392,10 @@ function laserPauseInterval(LaserPause) {
 
 GapCounter = 0
 
+phase = 1
+
+frameTimer = 0
+
 let resetButton = document.getElementById("resetButton")
 
 // -------------------------------------
@@ -293,10 +419,12 @@ function animate() {
     }
 
 
-    enemyX = enemyMovement(enemyX)
-
-    c.fillStyle = "red";
-    c.fillRect(enemyX, enemyY, enemyHeight, enemyWidth);
+   
+    if (boss === true) {
+      enemyX = enemyMovement(enemyX)
+      c.fillStyle = "red";
+      c.fillRect(enemyX, enemyY, enemyHeight, enemyWidth);
+    }
 
 
     if (GapCounter < 500) {
@@ -308,35 +436,25 @@ function animate() {
       GapCounter = 0
     }
 
-    console.log(GapCounter)
+    if (boss === true) {
+      for (let i = 0; i < lasers.length; i++) {
+        const laser = lasers[i];
+        laser.y += laser.dy;
+      
+        // check if the laser is off the canvas, and remove it from the array if it is
+        if (laser.y < 0 || laser.y > gameCanvas.height) {
+          lasers.splice(i, 1);
+          i--;
+          continue;
+        }
+      
+        // draw the laser on the canvas
+        c.fillStyle = laser.color;
+        c.fillRect(laser.x, laser.y, laser.width, laser.height);
 
-
-
-
-
-
-
-
-    for (let i = 0; i < lasers.length; i++) {
-      const laser = lasers[i];
-      laser.y += laser.dy;
-    
-      // check if the laser is off the canvas, and remove it from the array if it is
-      if (laser.y < 0 || laser.y > gameCanvas.height) {
-        lasers.splice(i, 1);
-        i--;
-        continue;
       }
-    
-      // draw the laser on the canvas
-      c.fillStyle = laser.color;
-      c.fillRect(laser.x, laser.y, laser.width, laser.height);
-
     }
 
-
-
-    
     const deltaX = playerX - mouseX;
     const deltaY = playerY - mouseY;
     let angle = Math.atan2(deltaY, deltaX) - Math.PI / 2;
@@ -355,16 +473,6 @@ function animate() {
       if (bullets[index].projectileY > gameCanvas.height || bullets[index].projectileY < 0 || bullets[index].projectileX > gameCanvas.width || bullets[index].projectileX < 0 ) {
           bullets.splice(index, 1);
       }
-
-
-
-    // for (let index = 0; index < lasers.length; index++) {
-    //   lasers[index].enemyLaserX += lasers[index].enemyLaserDX
-    //   lasers[index].enemyLaserY += lasers[index].enemyLaserDY
-    //   c.fillRect(lasers[index].enemyLaserX - projectileSize / 2, lasers[index].projectileY - projectileSize / 2, projectileSize, projectileSize);
-    //   if (lasers[index].projectileY > gameCanvas.height || lasers[index].projectileY < 0 || lasers[index].projectileX > gameCanvas.width || bullets[index].projectileX < 0 ) {
-    //       lasers.splice(index, 1);
-
       
   } 
       //   // Draw Cannon object
@@ -451,6 +559,50 @@ function animate() {
     }
 
     checkCollisions(PlayerDead);
+
+    console.log(health)
+
+    enemies.forEach(shooter => {
+      shooter.y += shooter.speed;
+
+      c.fillStyle = 'blue';
+      c.fillRect(shooter.x, shooter.y, shooter.width, shooter.height);
+    })
+
+    frameTimer += 1
+
+    if (frameTimer % 2000 === 0) {
+      frameTimer -= 2000
+      phase += 1
+      if (boss === false) {
+        boss = true
+      } else {
+        boss = false
+      }
+    }
+
+
+
+    if (phase === 1) {
+      if (frameTimer % 160 === 0) {
+          createShooter()
+      }
+  } else if (phase === 2) {
+      if (frameTimer % 100 === 0) {
+          createShooter()
+      }
+  } else if (phase > 2) {
+      if (frameTimer % 60 === 0) {
+          createShooter()
+      }
+  } 
+
+  enemyCollisionCheck()
+  updateShooters();
+  
+
+  console.log(phase)
+  console.log(frameTimer)
 
   }
 }
