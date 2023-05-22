@@ -128,6 +128,7 @@ function createShooter() {
     speed: 2, // Falling speed
     fireRate: 1000, // Fire rate in milliseconds
     lastFireTime: Date.now() // Initialize last fire time
+    
   };
 
   enemies.push(shooter);
@@ -136,11 +137,51 @@ function createShooter() {
 function updateShooters() {
   enemies.forEach((enemy) => {
     if (Date.now() - enemy.lastFireTime > enemy.fireRate) {
-      createShooterBullet(enemy);
+      if (enemy.type === 'multishooter') {
+        createMultishooterBullet(enemy);
+      } else {
+        createShooterBullet(enemy);
+      }
       enemy.lastFireTime = Date.now();
     }
   });
 }
+
+function createMultishooterBullet(enemy) {
+  const bulletSpeed = 3;
+  const bulletAngles = [0, Math.PI / 4, Math.PI / 2, (3 * Math.PI) / 4, Math.PI, (5 * Math.PI) / 4, (3 * Math.PI) / 2, (7 * Math.PI) / 4];
+
+  bulletAngles.forEach((angle) => {
+    const projectileDX = bulletSpeed * Math.cos(angle);
+    const projectileDY = bulletSpeed * Math.sin(angle);
+
+    bullets.push({
+      projectileX: enemy.x + 15,
+      projectileY: enemy.y + 15,
+      projectileDX,
+      projectileDY: projectileDY + 2,
+      isPlayerBullet: false,
+    });
+  });
+}
+
+function createMultishooter() {
+  const multishooter = {
+    x: Math.random() * gameCanvas.width, // Random x-coordinate
+    y: 0, // Starting y-coordinate (top of the canvas)
+    width: 30, // Block width
+    height: 30, // Block height
+    speed: 2, // Falling speed
+    fireRate: 2000, // Fire rate in milliseconds
+    lastFireTime: Date.now(), // Initialize last fire time
+    fireCooldown: 0,
+    type: "multishooter",
+  };
+
+  enemies.push(multishooter);
+
+}
+
 
 function enemyCollisionCheck() {
   bullets.forEach((bullet, bulletIndex) => {
@@ -569,10 +610,16 @@ function animate() {
       c.fillRect(shooter.x, shooter.y, shooter.width, shooter.height);
     })
 
+    // enemies.forEach((enemy) => {
+    //   if (enemy.type === 'multishooter') {
+    //     createMultishooterBullet(enemy);
+    //   }
+    // });
+
     frameTimer += 1
 
     if (frameTimer % 2000 === 0) {
-      frameTimer -= 2000
+      frameTimer -= 1000
       phase += 1
       if (boss === false) {
         boss = true
@@ -596,6 +643,20 @@ function animate() {
           createShooter()
       }
   } 
+
+  if (phase === 1) {
+    if (frameTimer % 330 === 0) {
+        createMultishooter()
+    }
+} else if (phase === 2) {
+    if (frameTimer % 220 === 0) {
+        createMultishooter()
+    }
+} else if (phase > 2) {
+    if (frameTimer % 110 === 0) {
+        createMultishooter()
+    }
+} 
 
   enemyCollisionCheck()
   updateShooters();
