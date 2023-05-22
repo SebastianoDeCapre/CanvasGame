@@ -10,8 +10,8 @@ gameCanvas.width = SCREENWIDTH /2;
 
 // -------------------------------------
 // Player variables
-let playerX = 100;
-let playerY = 100;
+let playerX = 370;
+let playerY = 500;
 let playerWidth = 20;
 let playerHeight = 30;
 let dx = 4;
@@ -497,6 +497,10 @@ function animate() {
       createBullet()
     }
 
+    if (boss === false) {
+      lasers = []
+    }
+
 
    
     if (boss === true) {
@@ -505,14 +509,15 @@ function animate() {
       c.fillRect(enemyX, enemyY, enemyHeight, enemyWidth);
     }
 
-
-    if (GapCounter < 500) {
-      createEnemyLaser(enemyX, enemyY)
-      GapCounter += 3
-    } else if (GapCounter >= 500 && GapCounter < 600) {
-      GapCounter += 4
-    } else if (GapCounter >= 600) {
-      GapCounter = 0
+    if (boss === true) {
+      if (GapCounter < 500) {
+        createEnemyLaser(enemyX, enemyY)
+        GapCounter += 3
+      } else if (GapCounter >= 500 && GapCounter < 600) {
+        GapCounter += 4
+      } else if (GapCounter >= 600) {
+        GapCounter = 0
+      }
     }
 
     if (boss === true) {
@@ -675,6 +680,7 @@ function animate() {
       phase += 1
       if (boss === false) {
         boss = true
+        lasers = []
       }
     }
 
