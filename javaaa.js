@@ -51,10 +51,10 @@ let purpleHeight = 100;
 
 //*** simple enemy ***//
 
-let enemyY = 40;
+let enemyY = 5;
 let enemyWidth = 30;
 let enemyHeight = 30;
-let enemyX = 20;
+let enemyX = 0;
 
 //** Enemy projectile varibels */
 let enemyLaserX = 0;
@@ -70,7 +70,7 @@ let lasers = []
 function enemyMovement(enemyX) {
   if (enemyX >= 750) {
     speed = -2;
-  } else if (enemyX <= 20) {
+  } else if (enemyX <= 5) {
     speed = 2
   }
 
@@ -104,8 +104,8 @@ enemies = []
 
 function createShooterBullet(shooter) {
   const bulletSpeed = 3;
-  const deltaX = playerX - shooter.x;
-  const deltaY = playerY - shooter.y;
+  const deltaX = playerX + 7.5 - shooter.x;
+  const deltaY = playerY + 25 - shooter.y;
   const angle = Math.atan2(deltaY, deltaX);
   const projectileDX = bulletSpeed * Math.cos(angle);
   const projectileDY = bulletSpeed * Math.sin(angle);
@@ -205,6 +205,29 @@ function enemyCollisionCheck() {
     });
   });
 }
+
+let enemyHp = 20;
+
+function bossCollisionCheck() {
+  bullets.forEach((bullet, bulletIndex) => {
+      if (
+        bullet.projectileX < enemyX + enemyWidth &&
+        bullet.projectileX + projectileSize > enemyX &&
+        bullet.projectileY < enemyY + enemyHeight &&
+        bullet.projectileY + projectileSize > enemyY && boss === true && bullet.isPlayerBullet === true
+      ) {
+        // Collision detected with player's bullet    
+          bullets.splice(bulletIndex, 1);
+          enemyHp--
+          if (enemyHp <= 0) {
+            boss = false
+            enemyHp = 20
+            health++
+        } 
+      }
+    });
+  }
+
 
 
 
@@ -438,11 +461,19 @@ phase = 1
 
 frameTimer = 0
 
+points = 0;
+
 let resetButton = document.getElementById("resetButton")
 
 let healthDisplay = document.getElementById("health-display");
 
 let immunityDisplay = document.getElementById("immunity-display");
+
+let scoreDisplay = document.getElementById("score-display");
+
+let phaseDisplay = document.getElementById("phase-display");
+
+let bossDisplay = document.getElementById("boss-display");
 
 
 // -------------------------------------
@@ -479,7 +510,7 @@ function animate() {
       createEnemyLaser(enemyX, enemyY)
       GapCounter += 3
     } else if (GapCounter >= 500 && GapCounter < 600) {
-      GapCounter += 7
+      GapCounter += 4
     } else if (GapCounter >= 600) {
       GapCounter = 0
     }
@@ -517,7 +548,11 @@ function animate() {
     for (let index = 0; index < bullets.length; index++) {
       bullets[index].projectileX += bullets[index].projectileDX
       bullets[index].projectileY += bullets[index].projectileDY
+      if (bullets[index].isPlayerBullet) {
+        c.fillStyle = 'blue';
+      }
       c.fillRect(bullets[index].projectileX - projectileSize / 2, bullets[index].projectileY - projectileSize / 2, projectileSize, projectileSize);
+      c.fillStyle = 'red';
       if (bullets[index].projectileY > gameCanvas.height || bullets[index].projectileY < 0 || bullets[index].projectileX > gameCanvas.width || bullets[index].projectileX < 0 ) {
           bullets.splice(index, 1);
       }
@@ -640,10 +675,10 @@ function animate() {
       phase += 1
       if (boss === false) {
         boss = true
-      } else {
-        boss = false
       }
     }
+
+    bossCollisionCheck()
 
 
 
@@ -682,13 +717,30 @@ function animate() {
   console.log(phase)
   console.log(frameTimer)
 
-  healthDisplay.innerHTML = "health " + (health + 1);
+  healthDisplay.innerHTML = "Health " + (health + 1);
 
+  scoreDisplay.innerHTML = "Score " + points;
+
+  phaseDisplay.innerHTML = "Phase " + phase;
+
+
+  if (boss === true) {
+    bossDisplay.innerHTML = "Boss Health " + enemyHp;
+    bossDisplay.style.display = "block";
+  } else {
+    bossDisplay.style.display = "none";
+  }
+  
   if (immunity === true) {
     immunityDisplay.style.display = "block";
   } else {
     immunityDisplay.style.display = "none";
   }
+
+  if (frameTimer % 20 === 0) {
+    points += 1
+  }
+
 
 
 
