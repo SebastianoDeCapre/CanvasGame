@@ -22,3 +22,22 @@
     top:300px;
     display:none;
 }
+
+#health-display {
+    position: absolute;
+    width: 100px;
+    height: 25px;
+    left:800px;
+    top: 30px;
+    background-color: wheat;
+}
+
+#immunity-display {
+    position: absolute;
+    width: 100px;
+    height: 25px;
+    left:800px;
+    top: 80px;
+    background-color: wheat;
+    display: none;
+}

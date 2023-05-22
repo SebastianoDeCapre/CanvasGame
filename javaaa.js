@@ -159,7 +159,7 @@ function createMultishooterBullet(enemy) {
       projectileX: enemy.x + 15,
       projectileY: enemy.y + 15,
       projectileDX,
-      projectileDY: projectileDY + 2,
+      projectileDY: projectileDY + 1,
       isPlayerBullet: false,
     });
   });
@@ -171,7 +171,7 @@ function createMultishooter() {
     y: 0, // Starting y-coordinate (top of the canvas)
     width: 30, // Block width
     height: 30, // Block height
-    speed: 2, // Falling speed
+    speed: 1, // Falling speed
     fireRate: 2000, // Fire rate in milliseconds
     lastFireTime: Date.now(), // Initialize last fire time
     fireCooldown: 0,
@@ -179,6 +179,7 @@ function createMultishooter() {
   };
 
   enemies.push(multishooter);
+
 
 }
 
@@ -209,7 +210,7 @@ function enemyCollisionCheck() {
 
 let immunity = false
 
-let health = 3
+let health = 2
 
 function checkCollisions() {
   // Loop through all the enemy lasers
@@ -277,7 +278,7 @@ function checkCollisions() {
           setTimeout(function() {
             immunity = false;
             console.log("Immunity expired");
-          }, 3000); // Delay in milliseconds (3 seconds);
+          }, 1000); // Delay in milliseconds (3 seconds);
         } else {
           PlayerDead = true;
           console.log("ded");
@@ -439,6 +440,11 @@ frameTimer = 0
 
 let resetButton = document.getElementById("resetButton")
 
+let healthDisplay = document.getElementById("health-display");
+
+let immunityDisplay = document.getElementById("immunity-display");
+
+
 // -------------------------------------
 // ------------ Animation ------------
 function animate() {
@@ -447,6 +453,7 @@ function animate() {
 
   if (PlayerDead === true) {
     resetButton.style.display = "block";
+    healthDisplay.innerHTML = health;
   } else {
     // Draw black player
     c.fillRect(playerX, playerY, playerWidth, playerHeight);
@@ -606,9 +613,19 @@ function animate() {
     enemies.forEach(shooter => {
       shooter.y += shooter.speed;
 
-      c.fillStyle = 'blue';
-      c.fillRect(shooter.x, shooter.y, shooter.width, shooter.height);
+      if (shooter.type === "multishooter") {
+        c.fillStyle = 'purple';
+        c.fillRect(shooter.x, shooter.y, shooter.width, shooter.height);
+      } else {
+        c.fillStyle = 'blue';
+        c.fillRect(shooter.x, shooter.y, shooter.width, shooter.height);
+      }
+
+
     })
+
+
+    c.fillStyle = 'red'
 
     // enemies.forEach((enemy) => {
     //   if (enemy.type === 'multishooter') {
@@ -619,7 +636,7 @@ function animate() {
     frameTimer += 1
 
     if (frameTimer % 2000 === 0) {
-      frameTimer -= 1000
+      frameTimer -= 2000
       phase += 1
       if (boss === false) {
         boss = true
@@ -665,6 +682,16 @@ function animate() {
   console.log(phase)
   console.log(frameTimer)
 
+  healthDisplay.innerHTML = "health " + (health + 1);
+
+  if (immunity === true) {
+    immunityDisplay.style.display = "block";
+  } else {
+    immunityDisplay.style.display = "none";
+  }
+
+
+
   }
 }
 
@@ -675,3 +702,4 @@ animate();
 resetButton.addEventListener("click", () => {
   location.reload();
 });
+
